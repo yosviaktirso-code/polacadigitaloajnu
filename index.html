@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Actividades MNU Regional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF9;
+    --panel:#FFFFFF;
+    --ink:#1C1C1E;
+    --ink-soft:#6B6B68;
+    --line:#E1E1DD;
+    --accent:#2B5FE0;
+    --accent-soft:#EAF0FE;
+    --now:#E0332F;
+    --danger:#C6423F;
+    --shadow-modal:0 24px 60px rgba(20,20,19,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    display:flex;flex-direction:column;overflow:hidden;
+    background:var(--bg);color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{scroll-behavior:auto !important;transition:none !important;}
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 22px;padding-left:max(22px, env(safe-area-inset-left));
+    padding-right:max(22px, env(safe-area-inset-right));
+    border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap;
+  }
+  .title{
+    font-family:'Space Grotesk','Inter',sans-serif;font-size:21px;font-weight:600;
+    margin:0;letter-spacing:0.1px;white-space:nowrap;
+  }
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .sync-status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft);margin-right:4px;}
+  .sync-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:#9A9A96;}
+  .sync-dot.online{background:#22A559;}
+  .sync-dot.offline{background:#E0A72B;}
+  button.btn{
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;
+    padding:9px 15px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);cursor:pointer;
+  }
+  button.btn:hover{border-color:#c7c7c2;}
+  button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  button.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.btn.primary:hover{background:#2450bf;}
+  button.btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  button.btn.danger{background:#fff;color:var(--danger);border-color:#EBC2C0;}
+  button.btn.danger:hover{background:#FCEDEC;}
+  button.icon-only{padding:9px 11px;}
+
+  @media (max-width:700px){
+    .topbar{padding:10px 14px;gap:8px;}
+    .title{font-size:16px;}
+    button.btn{padding:7px 11px;font-size:12px;}
+    .sync-status{font-size:11px;}
+  }
+  @media (max-height:430px){
+    .topbar{padding:7px 14px;}
+    .title{font-size:15px;}
+    button.btn{padding:6px 10px;font-size:11.5px;}
+  }
+
+  /* ---------- Schedule grid ---------- */
+  .schedule-container{
+    flex:1 1 auto;min-height:0;overflow:auto;position:relative;
+    -webkit-overflow-scrolling:touch;background:var(--bg);
+  }
+  .schedule-grid{position:relative;padding-bottom:46px;}
+  .loading-msg{padding:40px;color:var(--ink-soft);font-size:14px;}
+
+  .grid-row{display:flex;position:relative;}
+  .header-row{position:sticky;top:0;z-index:30;background:var(--bg);}
+
+  .organ-cell{
+    position:sticky;left:0;z-index:20;flex:0 0 auto;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    text-align:center;font-weight:700;font-size:13.5px;border:1px solid var(--line);
+    padding:6px;box-shadow:2px 0 5px rgba(20,20,19,0.05);
+  }
+  .header-row .organ-cell{z-index:40;background:var(--panel);color:var(--ink-soft);
+    font-family:'Space Grotesk',sans-serif;font-weight:600;text-transform:none;font-size:14px;box-shadow:none;}
+  .organ-name{word-break:break-word;}
+  .organ-actions{display:flex;gap:5px;}
+  .icon-btn{
+    width:23px;height:23px;border-radius:6px;border:1px solid rgba(28,28,30,0.18);
+    background:rgba(255,255,255,0.65);font-size:13px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:var(--ink);
+  }
+  .icon-btn:hover{background:#fff;}
+
+  .ticks-track{position:relative;flex:0 0 auto;}
+  .tick{
+    position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:600;color:var(--ink-soft);border-left:1px solid var(--line);
+  }
+
+  .activities-track{position:relative;flex:0 0 auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .activity{
+    position:absolute;top:4px;bottom:4px;border-radius:9px;z-index:5;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:4px 9px;font-size:12.5px;font-weight:600;line-height:1.2;
+    overflow:hidden;border:1px solid rgba(20,20,19,0.10);
+  }
+  body.edit-mode .activity{cursor:grab;touch-action:none;}
+  body.edit-mode .activity:hover{outline:2px solid var(--accent);outline-offset:-2px;}
+  .activity:active{cursor:grabbing;}
+  .activity-label{max-height:100%;overflow:hidden;}
+
+  .add-organ-row{padding:10px 14px;}
+  .add-organ-btn{width:100%;padding:11px;border:1.5px dashed var(--line);border-radius:10px;
+    background:transparent;color:var(--ink-soft);font-weight:600;font-size:13.5px;cursor:pointer;}
+  .add-organ-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+
+  .now-line{position:absolute;width:2px;background:var(--now);z-index:15;pointer-events:none;}
+  .now-label{
+    position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);
+    background:var(--now);color:#fff;font-weight:700;font-size:12.5px;
+    padding:4px 11px;border-radius:999px;white-space:nowrap;
+  }
+
+  @media (max-width:700px){
+    .organ-cell{font-size:12px;padding:5px;}
+    .tick{font-size:11px;}
+    .activity{font-size:11.5px;padding:3px 6px;}
+    .icon-btn{width:20px;height:20px;font-size:11px;}
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,15,14,0.5);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:18px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:380px;
+    box-shadow:var(--shadow-modal);max-height:90vh;overflow:auto;
+  }
+  .modal-title{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin:0 0 3px;}
+  .modal-sub{font-size:13px;color:var(--ink-soft);margin:0 0 16px;}
+  .field-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:14px 0 6px;}
+  .field-input{
+    width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink);background:#fff;
+  }
+  .field-input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .color-input{padding:4px;height:42px;cursor:pointer;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-error{color:var(--danger);font-size:12.5px;margin:12px 0 0;}
+  .modal-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:22px;}
+  .modal-actions-right{display:flex;gap:8px;margin-left:auto;}
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <h1 class="title">ACTIVIDADES MNU REGIONAL</h1>
+    <div class="controls">
+      <span class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncText">Conectando…</span></span>
+      <button class="btn" id="btnCenter" type="button">Centrar en ahora</button>
+      <button class="btn" id="btnEditToggle" type="button">Editar</button>
+      <button class="btn icon-only" id="btnSettings" type="button" title="Configuración del día">⚙</button>
+    </div>
+  </header>
+
+  <div class="schedule-container" id="scheduleContainer">
+    <div class="schedule-grid" id="scheduleGrid"><div class="loading-msg">Cargando horario…</div></div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalBody"></div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================================
+     CONFIGURACIÓN — editá esta sección para conectar tu propia base Firebase.
+     Instrucciones completas en el README.md que acompaña a este archivo.
+     Si dejás los valores de ejemplo, la app funciona igual pero cada
+     dispositivo guarda su propia copia local (sin sincronizar).
+     ========================================================================= */
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROYECTO.firebaseapp.com",
+    databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+    projectId: "TU_PROYECTO",
+  };
+  const SYNC_PATH = "mnuSchedule";
+  /* ========================================================================= */
+
+  const DEFAULT_DATA = {
+    settings: { dayStart: "08:30", dayEnd: "13:30" },
+    organs: [
+      { id:"cumbre", name:"Cumbre", color:"#A9D9A4", order:0 },
+      { id:"ag",     name:"AG",     color:"#9FE0DD", order:1 },
+      { id:"onum",   name:"ONUM",   color:"#C6ABEB", order:2 },
+      { id:"cdh",    name:"CDH",    color:"#F5E28C", order:3 },
+      { id:"emba",   name:"Emba",   color:"#F08E8E", order:4 },
+      { id:"cs",     name:"CS",     color:"#F5C093", order:5 },
+    ],
+    activities: [
+      { id:"a1",  organId:"cumbre", name:"Debate Particular Tópico B",        start:"08:30", end:"09:30" },
+      { id:"a2",  organId:"cumbre", name:"Coffee Break",                      start:"09:30", end:"10:00" },
+      { id:"a3",  organId:"cumbre", name:"Debate Particular Tópico B",        start:"10:00", end:"11:30" },
+      { id:"a4",  organId:"cumbre", name:"Debate Particular Tópico C",        start:"11:30", end:"13:00" },
+
+      { id:"a5",  organId:"ag",     name:"Debate General Tópico A",           start:"08:30", end:"10:00" },
+      { id:"a6",  organId:"ag",     name:"Coffee Break",                      start:"10:00", end:"10:30" },
+      { id:"a7",  organId:"ag",     name:"Debate General Tópico A",           start:"10:30", end:"12:30" },
+
+      { id:"a8",  organId:"onum",   name:"Debate General Tópico A",           start:"08:30", end:"09:45" },
+      { id:"a9",  organId:"onum",   name:"Coffee Break",                      start:"09:45", end:"10:15" },
+      { id:"a10", organId:"onum",   name:"Debate Particular Tópico A",        start:"10:15", end:"12:00" },
+
+      { id:"a11", organId:"cdh",    name:"Coffee Break",                      start:"08:30", end:"09:00" },
+      { id:"a12", organId:"cdh",    name:"Debate Particular Tópico C",        start:"09:00", end:"11:00" },
+      { id:"a13", organId:"cdh",    name:"Debate Particular Tópico D",        start:"11:00", end:"13:00" },
+
+      { id:"a14", organId:"emba",   name:"STI Cerrada",                       start:"08:30", end:"10:00" },
+      { id:"a15", organId:"emba",   name:'Tratado "Pies en la Tierra"',       start:"10:00", end:"12:30" },
+
+      { id:"a16", organId:"cs",     name:"Debate Particular Tópico B",        start:"08:30", end:"11:00" },
+      { id:"a17", organId:"cs",     name:"Coffee Break",                      start:"11:00", end:"11:30" },
+      { id:"a18", organId:"cs",     name:"Debate Particular Tópico C",        start:"11:30", end:"13:00" },
+    ],
+  };
+
+  const TZ = "America/Argentina/Cordoba";
+  const SNAP_MIN = 5;
+
+  let state = null;
+  let editMode = false;
+  let db = null, scheduleRef = null, syncEnabled = false;
+  let isDragging = false;
+  let dragCtx = null;
+  let PX_PER_MIN, ROW_H, ORGAN_W, HEADER_H, ADD_ORGAN_H;
+
+  /* ---------------- helpers ---------------- */
+  function timeToMin(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+  function minToTime(m){ m = Math.round(m); const h=Math.floor(m/60).toString().padStart(2,"0"); const mm=(m%60).toString().padStart(2,"0"); return h+":"+mm; }
+  function fmtShort(m){ const h=Math.floor(m/60); const mm=(m%60).toString().padStart(2,"0"); return h+":"+mm; }
+  function snap5(m){ return Math.round(m/SNAP_MIN)*SNAP_MIN; }
+  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function debounce(fn, ms){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), ms); }; }
+  function uid(prefix){ return prefix+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+  function ensureDefaults(s){
+    if(!s.settings) s.settings = { dayStart:"08:30", dayEnd:"18:00" };
+    if(!Array.isArray(s.organs)) s.organs = [];
+    if(!Array.isArray(s.activities)) s.activities = [];
+  }
+
+  function computeResponsiveConstants(){
+    const narrow = window.innerWidth < 700;
+    PX_PER_MIN = narrow ? 4 : 6;
+    ROW_H = narrow ? 56 : 72;
+    ORGAN_W = narrow ? 88 : 152;
+    HEADER_H = narrow ? 38 : 46;
+    ADD_ORGAN_H = 44;
+  }
+
+  /* ---------------- sync ---------------- */
+  function isFirebaseConfigured(){
+    return firebaseConfig.apiKey && firebaseConfig.apiKey.indexOf("TU_") === -1;
+  }
+
+  function updateSyncStatus(mode){
+    const dot = document.getElementById("syncDot");
+    const text = document.getElementById("syncText");
+    if(mode==="online"){ dot.className="sync-dot online"; text.textContent="Sincronizado"; }
+    else if(mode==="local"){ dot.className="sync-dot offline"; text.textContent="Local (sin sincronizar)"; }
+    else { dot.className="sync-dot offline"; text.textContent="Sin conexión — copia local"; }
+  }
+
+  function saveLocal(){ try{ localStorage.setItem("mnuSchedule", JSON.stringify(state)); }catch(e){} }
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem("mnuSchedule");
+      state = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }catch(e){ state = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+    ensureDefaults(state);
+  }
+
+  function persist(){
+    if(syncEnabled && scheduleRef){
+      scheduleRef.set(state).catch(()=>{ saveLocal(); });
+    } else {
+      saveLocal();
+    }
+  }
+
+  function initSync(){
+    if(!isFirebaseConfigured()){
+      syncEnabled = false;
+      updateSyncStatus("local");
+      loadLocal();
+      render();
+      return;
+    }
+    try{
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      scheduleRef = db.ref(SYNC_PATH);
+      syncEnabled = true;
+      scheduleRef.on("value", snap=>{
+        const val = snap.val();
+        if(val){ state = val; ensureDefaults(state); }
+        else { state = JSON.parse(JSON.stringify(DEFAULT_DATA)); scheduleRef.set(state); }
+        updateSyncStatus("online");
+        render();
+      }, ()=>{
+        syncEnabled = false;
+        updateSyncStatus("error");
+        loadLocal();
+        render();
+      });
+    }catch(e){
+      syncEnabled = false;
+      updateSyncStatus("error");
+      loadLocal();
+      render();
+    }
+  }
+
+  /* ---------------- render ---------------- */
+  function buildTicks(originMin, endMin){
+    let html = "";
+    for(let m=originMin; m<endMin; m+=30){
+      const segEnd = Math.min(m+30, endMin);
+      const left = (m-originMin)*PX_PER_MIN;
+      const w = (segEnd-m)*PX_PER_MIN;
+      html += `<div class="tick" style="left:${left}px;width:${w}px;">${fmtShort(m)} - ${fmtShort(segEnd)}</div>`;
+    }
+    return html;
+  }
+
+  function buildActivityHTML(a, organ, originMin){
+    const left = (timeToMin(a.start)-originMin)*PX_PER_MIN;
+    const width = Math.max((timeToMin(a.end)-timeToMin(a.start))*PX_PER_MIN, 14);
+    return `<div class="activity" data-id="${a.id}" style="left:${left}px;width:${width}px;background:${organ.color};">
+      <span class="activity-label">${escapeHtml(a.name)}</span>
+    </div>`;
+  }
+
+  function buildNowLineHTML(originMin, endMin, dataRowsHeight){
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour:"2-digit", minute:"2-digit", hour12:false }).formatToParts(now);
+    const hh = parseInt(parts.find(p=>p.type==="hour").value, 10);
+    const mm = parseInt(parts.find(p=>p.type==="minute").value, 10);
+    const nowMin = hh*60+mm;
+    if(nowMin < originMin || nowMin > endMin) return "";
+    const left = ORGAN_W + (nowMin-originMin)*PX_PER_MIN;
+    const label = hh + ":" + mm.toString().padStart(2,"0");
+    return `<div class="now-line" id="nowLine" style="left:${left}px;top:${HEADER_H}px;height:${dataRowsHeight}px;">
+      <div class="now-label">${label}</div>
+    </div>`;
+  }
+
+  function render(){
+    ensureDefaults(state);
+    const organs = state.organs.slice().sort((a,b)=>a.order-b.order);
+    const originMin = timeToMin(state.settings.dayStart);
+    const endMin = timeToMin(state.settings.dayEnd);
+    const totalMin = Math.max(30, endMin-originMin);
+    const trackWidth = totalMin*PX_PER_MIN;
+    const gridWidth = ORGAN_W + trackWidth;
+
+    let html = "";
+
+    html += `<div class="grid-row header-row">
+      <div class="organ-cell hora-cell" style="width:${ORGAN_W}px;height:${HEADER_H}px;">Hora</div>
+      <div class="ticks-track" style="width:${trackWidth}px;height:${HEADER_H}px;">${buildTicks(originMin,endMin)}</div>
+    </div>`;
+
+    organs.forEach(organ=>{
+      const acts = state.activities.filter(a=>a.organId===organ.id);
+      html += `<div class="grid-row">
+        <div class="organ-cell" style="width:${ORGAN_W}px;height:${ROW_H}px;background:${organ.color};">
+          <span class="organ-name">${escapeHtml(organ.name)}</span>
+          ${editMode ? `<div class="organ-actions">
+            <button class="icon-btn" type="button" title="Agregar actividad" onclick="MNU.openActivityModal(null,'${organ.id}')">+</button>
+            <button class="icon-btn" type="button" title="Editar órgano" onclick="MNU.openOrganModal('${organ.id}')">⋯</button>
+          </div>` : ""}
+        </div>
+        <div class="activities-track" style="width:${trackWidth}px;height:${ROW_H}px;">
+          ${acts.map(a=>buildActivityHTML(a,organ,originMin)).join("")}
+        </div>
+      </div>`;
+    });
+
+    if(editMode){
+      html += `<div class="grid-row add-organ-row" style="width:${gridWidth}px;">
+        <button class="add-organ-btn" type="button" onclick="MNU.openOrganModal(null)">+ Agregar órgano</button>
+      </div>`;
+    }
+
+    const dataRowsHeight = organs.length*ROW_H + (editMode ? ADD_ORGAN_H+20 : 0);
+    html += buildNowLineHTML(originMin, endMin, dataRowsHeight);
+
+    const gridEl = document.getElementById("scheduleGrid");
+    gridEl.style.width = gridWidth+"px";
+    gridEl.innerHTML = html;
+
+    attachDragHandlers();
+  }
+
+  /* ---------------- drag to move activities ---------------- */
+  function attachDragHandlers(){
+    if(!editMode) return;
+    document.querySelectorAll(".activity").forEach(el=>{
+      el.addEventListener("pointerdown", onActivityPointerDown);
+    });
+  }
+
+  function onActivityPointerDown(e){
+    const el = e.currentTarget;
+    const id = el.dataset.id;
+    const activity = state.activities.find(a=>a.id===id);
+    if(!activity) return;
+    dragCtx = {
+      el, id,
+      startX: e.clientX,
+      startLeft: parseFloat(el.style.left),
+      origStartMin: timeToMin(activity.start),
+      origEndMin: timeToMin(activity.end),
+      moved: false,
+      pendingStart: null,
+    };
+    el.setPointerCapture(e.pointerId);
+    el.addEventListener("pointermove", onActivityPointerMove);
+    el.addEventListener("pointerup", onActivityPointerUp);
+    el.addEventListener("pointercancel", onActivityPointerUp);
+  }
+
+  function onActivityPointerMove(e){
+    if(!dragCtx) return;
+    const dx = e.clientX - dragCtx.startX;
+    if(Math.abs(dx) > 3){ dragCtx.moved = true; isDragging = true; }
+    if(!dragCtx.moved) return;
+    let deltaMin = snap5(dx / PX_PER_MIN);
+    const duration = dragCtx.origEndMin - dragCtx.origStartMin;
+    const originMin = timeToMin(state.settings.dayStart);
+    const endBoundMin = timeToMin(state.settings.dayEnd);
+    let newStart = dragCtx.origStartMin + deltaMin;
+    newStart = Math.max(originMin, Math.min(newStart, endBoundMin-duration));
+    dragCtx.pendingStart = newStart;
+    dragCtx.el.style.left = ((newStart-originMin)*PX_PER_MIN) + "px";
+  }
+
+  function onActivityPointerUp(){
+    if(!dragCtx) return;
+    const el = dragCtx.el;
+    el.removeEventListener("pointermove", onActivityPointerMove);
+    el.removeEventListener("pointerup", onActivityPointerUp);
+    el.removeEventListener("pointercancel", onActivityPointerUp);
+
+    if(dragCtx.moved && dragCtx.pendingStart != null){
+      const activity = state.activities.find(a=>a.id===dragCtx.id);
+      const duration = dragCtx.origEndMin - dragCtx.origStartMin;
+      activity.start = minToTime(dragCtx.pendingStart);
+      activity.end = minToTime(dragCtx.pendingStart+duration);
+      persist();
+      render();
+    } else {
+      const activity = state.activities.find(a=>a.id===dragCtx.id);
+      if(activity) openActivityModal(activity.id, activity.organId);
+    }
+    isDragging = false;
+    dragCtx = null;
+  }
+
+  /* ---------------- center on now ---------------- */
+  function centerNow(){
+    const line = document.getElementById("nowLine");
+    const container = document.getElementById("scheduleContainer");
+    if(!line){
+      alert("La hora actual está fuera del rango del día configurado. Ajustá el rango en Configuración (⚙) si querés verla.");
+      return;
+    }
+    const lineLeft = parseFloat(line.style.left);
+    const viewportW = container.clientWidth;
+    const maxScroll = Math.max(container.scrollWidth - container.clientWidth, 0);
+    const target = Math.min(Math.max(lineLeft - viewportW/3, 0), maxScroll);
+    container.scrollTo({ left: target, behavior: "smooth" });
+  }
+
+  /* ---------------- edit mode ---------------- */
+  function toggleEdit(){
+    editMode = !editMode;
+    document.body.classList.toggle("edit-mode", editMode);
+    const btn = document.getElementById("btnEditToggle");
+    btn.textContent = editMode ? "Salir de edición" : "Editar";
+    btn.classList.toggle("active", editMode);
+    render();
+  }
+
+  /* ---------------- modal ---------------- */
+  function showModal(){ document.getElementById("modalOverlay").classList.add("show"); }
+  function closeModal(){ document.getElementById("modalOverlay").classList.remove("show"); document.getElementById("modalBody").innerHTML=""; }
+  function showModalError(msg){
+    const el = document.getElementById("modalError");
+    if(el){ el.textContent = msg; el.style.display = "block"; }
+  }
+
+  function openActivityModal(activityId, organId){
+    const isNew = !activityId;
+    const activity = isNew
+      ? { id:null, name:"", start: state.settings.dayStart, end: minToTime(timeToMin(state.settings.dayStart)+30), organId }
+      : state.activities.find(a=>a.id===activityId);
+    const organ = state.organs.find(o=>o.id===(activity.organId||organId));
+    document.getElementById("modalBody").innerHTML = `
+      <h2 class="modal-title">${isNew?"Nueva actividad":"Editar actividad"}</h2>
+      <p class="modal-sub">${escapeHtml(organ ? organ.name : "")}</p>
+      <label class="field-label">Nombre</label>
+      <input id="fName" class="field-input" type="text" maxlength="80" value="${escapeHtml(activity.name)}" placeholder="Nombre de la actividad">
+      <div class="field-row">
+        <div><label class="field-label">Inicio</label><input id="fStart" class="field-input" type="time" step="300" value="${activity.start}"></div>
+        <div><label class="field-label">Fin</label><input id="fEnd" class="field-input" type="time" step="300" value="${activity.end}"></div>
+      </div>
+      <p class="modal-error" id="modalError" style="display:none;"></p>
+      <div class="modal-actions">
+        ${isNew ? "<span></span>" : `<button class="btn danger" type="button" onclick="MNU.deleteActivity('${activity.id}')">Eliminar</button>`}
+        <div class="modal-actions-right">
+          <button class="btn" type="button" onclick="MNU.closeModal()">Cancelar</button>
+          <button class="btn primary" type="button" onclick="MNU.saveActivity(${isNew?"null":`'${activity.id}'`},'${activity.organId||organId}')">Guardar</button>
+        </div>
+      </div>
+    `;
+    showModal();
+    document.getElementById("fName").focus();
+  }
+
+  function saveActivity(activityId, organId){
+    const name = document.getElementById("fName").value.trim();
+    const startVal = document.getElementById("fStart").value;
+    const endVal = document.getElementById("fEnd").value;
+    if(!name){ showModalError("Poné un nombre para la actividad."); return; }
+    if(!startVal || !endVal){ showModalError("Completá el horario de inicio y fin."); return; }
+
+    const dayStartMin = timeToMin(state.settings.dayStart);
+    const dayEndMin = timeToMin(state.settings.dayEnd);
+    let sMin = snap5(timeToMin(startVal));
+    let eMin = snap5(timeToMin(endVal));
+    sMin = Math.max(dayStartMin, Math.min(sMin, dayEndMin-SNAP_MIN));
+    eMin = Math.max(sMin+SNAP_MIN, Math.min(eMin, dayEndMin));
+    if(eMin <= sMin){ showModalError("El horario de fin debe ser posterior al de inicio."); return; }
+
+    if(activityId){
+      const activity = state.activities.find(a=>a.id===activityId);
+      activity.name = name; activity.start = minToTime(sMin); activity.end = minToTime(eMin);
+    } else {
+      state.activities.push({ id: uid("a"), organId, name, start: minToTime(sMin), end: minToTime(eMin) });
+    }
+    persist();
+    closeModal();
+    render();
+  }
+
+  function deleteActivity(id){
+    if(!confirm("¿Eliminar esta actividad?")) return;
+    state.activities = state.activities.filter(a=>a.id!==id);
+    persist();
+    closeModal();
+    render();
+  }
+
+  function openOrganModal(organId){
+    const isNew = !organId;
+    const organ = isNew
+      ? { id:null, name:"", color:"#CFE1FF", order: state.organs.length }
+      : state.organs.find(o=>o.id===organId);
+    document.getElementById("modalBody").innerHTML = `
+      <h2 class="modal-title">${isNew?"Nuevo órgano":"Editar órgano"}</h2>
+      <label class="field-label">Nombre</label>
+      <input id="oName" class="field-input" type="text" maxlength="40" value="${escapeHtml(organ.name)}" placeholder="Nombre del órgano">
+      <label class="field-label">Color</label>
+      <input id="oColor" class="field-input color-input" type="color" value="${organ.color}">
+      <p class="modal-error" id="modalError" style="display:none;"></p>
+      <div class="modal-actions">
+        ${isNew ? "<span></span>" : `<button class="btn danger" type="button" onclick="MNU.deleteOrgan('${organ.id}')">Eliminar órgano</button>`}
+        <div class="modal-actions-right">
+          <button class="btn" type="button" onclick="MNU.closeModal()">Cancelar</button>
+          <button class="btn primary" type="button" onclick="MNU.saveOrgan(${isNew?"null":`'${organ.id}'`})">Guardar</button>
+        </div>
+      </div>
+    `;
+    showModal();
+    document.getElementById("oName").focus();
+  }
+
+  function saveOrgan(organId){
+    const name = document.getElementById("oName").value.trim();
+    const color = document.getElementById("oColor").value;
+    if(!name){ showModalError("Poné un nombre para el órgano."); return; }
+    if(organId){
+      const organ = state.organs.find(o=>o.id===organId);
+      organ.name = name; organ.color = color;
+    } else {
+      state.organs.push({ id: uid("o"), name, color, order: state.organs.length });
+    }
+    persist();
+    closeModal();
+    render();
+  }
+
+  function deleteOrgan(organId){
+    if(!confirm("¿Eliminar este órgano y todas sus actividades?")) return;
+    state.organs = state.organs.filter(o=>o.id!==organId);
+    state.activities = state.activities.filter(a=>a.organId!==organId);
+    persist();
+    closeModal();
+    render();
+  }
+
+  function openSettingsModal(){
+    document.getElementById("modalBody").innerHTML = `
+      <h2 class="modal-title">Configuración del día</h2>
+      <p class="modal-sub">Define el rango horario que se muestra en la grilla.</p>
+      <label class="field-label">Inicio del día</label>
+      <input id="sStart" class="field-input" type="time" step="300" value="${state.settings.dayStart}">
+      <label class="field-label">Fin del día</label>
+      <input id="sEnd" class="field-input" type="time" step="300" value="${state.settings.dayEnd}">
+      <p class="modal-error" id="modalError" style="display:none;"></p>
+      <div class="modal-actions">
+        <span></span>
+        <div class="modal-actions-right">
+          <button class="btn" type="button" onclick="MNU.closeModal()">Cancelar</button>
+          <button class="btn primary" type="button" onclick="MNU.saveSettings()">Guardar</button>
+        </div>
+      </div>
+    `;
+    showModal();
+  }
+
+  function saveSettings(){
+    const startVal = document.getElementById("sStart").value;
+    const endVal = document.getElementById("sEnd").value;
+    if(!startVal || !endVal){ showModalError("Completá ambos horarios."); return; }
+    const sMin = snap5(timeToMin(startVal));
+    const eMin = snap5(timeToMin(endVal));
+    if(eMin - sMin < 30){ showModalError("El rango debe ser de al menos 30 minutos."); return; }
+    state.settings.dayStart = minToTime(sMin);
+    state.settings.dayEnd = minToTime(eMin);
+    persist();
+    closeModal();
+    render();
+  }
+
+  /* ---------------- init ---------------- */
+  document.addEventListener("DOMContentLoaded", ()=>{
+    computeResponsiveConstants();
+    initSync();
+
+    document.getElementById("btnCenter").addEventListener("click", centerNow);
+    document.getElementById("btnEditToggle").addEventListener("click", toggleEdit);
+    document.getElementById("btnSettings").addEventListener("click", openSettingsModal);
+    document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
+    document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+    window.addEventListener("resize", debounce(()=>{ computeResponsiveConstants(); if(state) render(); }, 200));
+    setInterval(()=>{ if(!isDragging && state) render(); }, 60000);
+  });
+
+  /* expose the handful of functions used by inline onclick handlers */
+  window.MNU = { openActivityModal, saveActivity, deleteActivity, openOrganModal, saveOrgan, deleteOrgan, saveSettings, closeModal };
+})();
+</script>
+</body>
+</html>
